@@ -18,3 +18,16 @@ tests
 .phpunit.result.cache
 Dockerfile
 .dockerignore
+.agents
+.claude
+.mcp.json
+.editorconfig
+.gitattributes
+.gitignore
+AGENTS.md
+CLAUDE.md
+README.md
+boost.json
+opencode.json
+phpunit.xml
+.codex

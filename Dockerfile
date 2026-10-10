@@ -60,7 +60,31 @@ COPY --from=assets /app/public/build ./public/build
 RUN composer dump-autoload --optimize --no-dev \
     && chown -R www-data:www-data storage bootstrap/cache
 
+# Entrypoint: prepare .env and APP_KEY at runtime (never bake the key into the image)
+COPY <<'EOF' /usr/local/bin/docker-entrypoint.sh
+#!/bin/sh
+set -e
+
+if [ ! -f .env ]; then
+    cp .env.example .env
+    sed -i -e 's/^APP_ENV=.*/APP_ENV=production/' -e 's/^APP_DEBUG=.*/APP_DEBUG=false/' .env
+fi
+
+if [ -z "$APP_KEY" ] && ! grep -q '^APP_KEY=.\+' .env; then
+    echo "WARNING: APP_KEY not provided, generating one. Set APP_KEY as an environment variable to keep it stable across deploys." >&2
+    php artisan key:generate --force --no-interaction
+fi
+
+chown www-data:www-data .env
+
+# Cache config/routes/views at startup so runtime env vars are picked up
+php artisan optimize
+
+exec "$@"
+EOF
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+
 EXPOSE 80
 
-# Cache config/routes/views at startup (so runtime env vars are picked up), then start Apache
-CMD ["sh", "-c", "php artisan optimize && apache2-foreground"]
+ENTRYPOINT ["docker-entrypoint.sh"]
+CMD ["apache2-foreground"]
