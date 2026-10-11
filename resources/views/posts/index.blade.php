@@ -35,7 +35,7 @@
     </style>
 </head>
 <body>
-    <h1>Posts</h1>
+    <h1>Posts By Reynel</h1>
 
     @forelse ($posts as $post)
         <article>
